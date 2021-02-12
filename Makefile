@@ -9,3 +9,4 @@ csi/protos/csi.proto:
 
 clean:
 	rm csi/protos/csi.proto
+	rm csi/csi_pb2.py csi/csi_pb2_grpc.py
