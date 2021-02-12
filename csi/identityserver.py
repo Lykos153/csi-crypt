@@ -5,7 +5,7 @@ import csi_pb2
 import csi_pb2_grpc
 
 
-DRIVER_NAME = "csi-luks"
+DRIVER_NAME = "de.silvio-ankermann.csi-crypt"
 DRIVER_VERSION = "0.0.1"
 
 
