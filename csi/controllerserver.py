@@ -3,6 +3,8 @@ controller server implementation
 """
 import logging
 
+import grpc
+
 import csi_pb2
 import csi_pb2_grpc
 
@@ -32,3 +34,16 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
                 },
             ]
         )
+
+    def ValidateVolumeCapabilities(self, request, context):
+        # TODO
+        pass
+
+    def CreateVolume(self, request, context):
+        self.logger.debug("Received request: CreateVolume")
+        context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
+        return csi_pb2.CreateVolumeResponse()
+
+    def DeleteVolume(self, request, context):
+        self.logger.debug("Received request: DeleteVolume")
+        return csi_pb2.DeleteVolumeResponse()
