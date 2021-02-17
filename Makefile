@@ -1,12 +1,15 @@
 .PHONY: build-grpc clean
 
-build-grpc: csi/protos/csi.proto
-	python3 -m grpc_tools.protoc -I./csi/protos --python_out=csi --grpc_python_out=csi ./csi/protos/csi.proto
+proto_dir = csi/protos
+package_dir = csi
 
-csi/protos/csi.proto:
-	mkdir -p csi/protos
-	curl -o csi/protos/csi.proto "https://raw.githubusercontent.com/container-storage-interface/spec/v1.3.0/csi.proto"
+build-grpc: $(proto_dir)/csi.proto
+	python3 -m grpc_tools.protoc -I./$(proto_dir) --python_out=$(package_dir) --grpc_python_out=$(package_dir) $<
+
+$(proto_dir)/csi.proto:
+	mkdir -p $(proto_dir)
+	curl -o $@ "https://raw.githubusercontent.com/container-storage-interface/spec/v1.3.0/csi.proto"
 
 clean:
-	rm csi/protos/csi.proto
-	rm csi/csi_pb2.py csi/csi_pb2_grpc.py
+	rm $(proto_dir)/csi.proto
+	rm $(package_dir)/csi_pb2.py $(package_dir)/csi_pb2_grpc.py
