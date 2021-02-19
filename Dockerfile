@@ -1,10 +1,3 @@
-# FROM python:alpine as builder
-
-# RUN apk add --no-cache alpine-sdk linux-headers
-# RUN pip install --upgrade pip
-# COPY requirements.txt /
-# RUN pip install -r /requirements.txt
-
 FROM python
 RUN mkdir -p /appdir
 
