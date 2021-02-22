@@ -15,7 +15,7 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
     Ref:https://github.com/container-storage-interface/spec/blob/master/spec.md
     """
 
-    def __init(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerServer")
 

@@ -14,7 +14,7 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
     volume mount and PV mounts.
     Ref:https://github.com/container-storage-interface/spec/blob/master/spec.md
     """
-    def __init(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("NodeServer")
 
