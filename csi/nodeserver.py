@@ -1,6 +1,7 @@
 """
 nodeserver implementation
 """
+import os
 import logging
 
 import csi_pb2
@@ -29,3 +30,9 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
     def NodeUnpublishVolume(self, request, context):
         self.logger.debug("Received request: NodeUnpublishVolume for {}".format(volume=request.volume_id))
         return csi_pb2.NodeUnpublishVolumeResponse()
+
+    def NodeGetInfo(self, request, context):
+        self.logger.debug("Received request: NodeGetInfo")
+        return csi_pb2.NodeGetInfoResponse(
+            node_id=os.environ["NODE_ID"][0:128], #128 byte is RECOMMENDED for best backwards compatibility
+        )
