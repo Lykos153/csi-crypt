@@ -25,6 +25,7 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
     h = logging.StreamHandler()
+    h.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(h)
 
     server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=10))

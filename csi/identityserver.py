@@ -8,6 +8,7 @@ from . import csi_pb2_grpc
 
 from . import __version__ as DRIVER_VERSION
 from . import DRIVER_NAME
+from .utils import log_request_and_reply
 
 class IdentityServer(csi_pb2_grpc.IdentityServicer):
     """
@@ -19,15 +20,15 @@ class IdentityServer(csi_pb2_grpc.IdentityServicer):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("IdentityServer")
 
+    @log_request_and_reply
     def GetPluginInfo(self, request, context):
-        self.logger.debug("Received request: GetPluginInfo")
         return csi_pb2.GetPluginInfoResponse(
             name=DRIVER_NAME,
             vendor_version=DRIVER_VERSION
         )
 
+    @log_request_and_reply
     def GetPluginCapabilities(self, request, context):
-        self.logger.debug("Received request: GetPluginCapabilities")
         # using getattr to avoid Pylint error
         capability_type = getattr(
             csi_pb2.PluginCapability.Service, "Type").Value
@@ -56,6 +57,6 @@ class IdentityServer(csi_pb2_grpc.IdentityServicer):
             ]
         )
 
+    @log_request_and_reply
     def Probe(self, request, context):
-        self.logger.debug("Received request: Probe")
         return csi_pb2.ProbeResponse()

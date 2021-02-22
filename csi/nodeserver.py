@@ -6,6 +6,7 @@ import logging
 
 from . import csi_pb2
 from . import csi_pb2_grpc
+from .utils import log_request_and_reply
 
 
 
@@ -19,20 +20,20 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("NodeServer")
 
+    @log_request_and_reply
     def NodeGetCapabilities(self, request, context):
-        self.logger.debug("Received request: NodeGetCapabilities")
         return csi_pb2.NodeGetCapabilitiesResponse()
 
+    @log_request_and_reply(fields=["volume_id"])
     def NodePublishVolume(self, request, context):
-        self.logger.debug("Received request: NodePublishVolume for {}".format(volume=request.volume_id))
         return csi_pb2.NodePublishVolumeResponse()
 
+    @log_request_and_reply(fields=["volume_id"])
     def NodeUnpublishVolume(self, request, context):
-        self.logger.debug("Received request: NodeUnpublishVolume for {}".format(volume=request.volume_id))
         return csi_pb2.NodeUnpublishVolumeResponse()
 
+    @log_request_and_reply
     def NodeGetInfo(self, request, context):
-        self.logger.debug("Received request: NodeGetInfo")
         return csi_pb2.NodeGetInfoResponse(
             node_id=os.environ["NODE_ID"][0:128], #128 byte is RECOMMENDED for best backwards compatibility
         )

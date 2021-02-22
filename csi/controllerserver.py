@@ -7,6 +7,7 @@ import grpc
 
 from . import csi_pb2
 from . import csi_pb2_grpc
+from .utils import log_request_and_reply
 
 class ControllerServer(csi_pb2_grpc.ControllerServicer):
     """
@@ -19,8 +20,8 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerServer")
 
+    @log_request_and_reply
     def ControllerGetCapabilities(self, request, context):
-        self.logger.debug("Received request: ControllerGetCapabilities")
         # using getattr to avoid Pylint error
         capability_type = getattr(
             csi_pb2.ControllerServiceCapability.RPC, "Type").Value
@@ -35,15 +36,16 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
             ]
         )
 
+    @log_request_and_reply
     def ValidateVolumeCapabilities(self, request, context):
         # TODO
         pass
 
+    @log_request_and_reply
     def CreateVolume(self, request, context):
-        self.logger.debug("Received request: CreateVolume")
         context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
         return csi_pb2.CreateVolumeResponse()
 
+    @log_request_and_reply
     def DeleteVolume(self, request, context):
-        self.logger.debug("Received request: DeleteVolume")
         return csi_pb2.DeleteVolumeResponse()
