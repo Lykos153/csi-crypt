@@ -3,13 +3,11 @@ Identity Server implementation
 """
 import logging
 
-import csi_pb2
-import csi_pb2_grpc
+from . import csi_pb2
+from . import csi_pb2_grpc
 
-
-DRIVER_NAME = "de.silvio-ankermann.csi-crypt"
-DRIVER_VERSION = "0.0.1"
-
+from . import __version__ as DRIVER_VERSION
+from . import DRIVER_NAME
 
 class IdentityServer(csi_pb2_grpc.IdentityServicer):
     """

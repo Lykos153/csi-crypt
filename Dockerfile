@@ -9,5 +9,6 @@ COPY ${package_dir} /appdir/csi
 RUN make -C /appdir/csi
 
 ENV CSI_ENDPOINT unix:///csi.sock
+ENV PYTHONPATH /appdir
 
-CMD ["python",  "/appdir/csi/run.py"]
+CMD ["python",  "-m", "csi.run"]

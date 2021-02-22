@@ -8,10 +8,10 @@ import logging
 
 import grpc
 
-import csi_pb2_grpc
-from identityserver import IdentityServer
-from controllerserver import ControllerServer
-from nodeserver import NodeServer
+from . import csi_pb2_grpc
+from .identityserver import IdentityServer
+from .controllerserver import ControllerServer
+from .nodeserver import NodeServer
 
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24

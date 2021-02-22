@@ -5,8 +5,8 @@ import logging
 
 import grpc
 
-import csi_pb2
-import csi_pb2_grpc
+from . import csi_pb2
+from . import csi_pb2_grpc
 
 class ControllerServer(csi_pb2_grpc.ControllerServicer):
     """

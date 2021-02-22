@@ -4,8 +4,8 @@ nodeserver implementation
 import os
 import logging
 
-import csi_pb2
-import csi_pb2_grpc
+from . import csi_pb2
+from . import csi_pb2_grpc
 
 
 
