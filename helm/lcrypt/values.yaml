@@ -1,0 +1,4 @@
+namespace: kube-system
+kubeletDir: /var/lib/kubelet
+# imageName:
+# pullSecret:

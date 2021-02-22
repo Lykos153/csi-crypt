@@ -2,7 +2,7 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: lcrypt-csi-nodeplugin
-  namespace: {{ namespace }}
+  namespace: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/part-of: lcrypt
     app.kubernetes.io/component: csi-driver
@@ -19,21 +19,22 @@ spec:
         app.kubernetes.io/part-of: lcrypt
         app.kubernetes.io/component: csi-driver
         app.kubernetes.io/name: lcrypt-csi-nodeplugin
-      namespace: {{ namespace }}
+      namespace: {{ .Values.namespace }}
     spec:
       # serviceAccountName: lcrypt-csi-nodeplugin
+      imagePullSecrets:
+        - name: {{ .Values.pullSecret }}
       containers:
         - name: csi-driver-registrar
           image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v1.3.0
           args:
             - "--csi-address=$(ADDRESS)"
             - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
-            - "--health-port=9809"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
             - name: DRIVER_REG_SOCK_PATH
-              value: {{ kubelet_dir }}/plugins/lcrypt/csi.sock
+              value: {{ .Values.kubeletDir }}/plugins/lcrypt/csi.sock
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -43,22 +44,13 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
-          ports:
-            - containerPort: 9809
-              name: healthz
-          livenessProbe:
-            httpGet:
-              path: /healthz
-              port: healthz
-            initialDelaySeconds: 5
-            timeoutSeconds: 5
         - name: lcrypt-nodeplugin
           securityContext:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: {{ image_name }}
+          image: {{ .Values.imageName }}
           env:
             - name: NODE_ID
               valueFrom:
@@ -72,18 +64,18 @@ spec:
             - name: plugin-dir
               mountPath: /plugin
             - name: pods-mount-dir
-              mountPath: {{ kubelet_dir }}/pods
+              mountPath: {{ .Values.kubeletDir }}/pods
               mountPropagation: "Bidirectional"
       volumes:
         - name: registration-dir
           hostPath:
-            path: {{ kubelet_dir }}/plugins_registry/
+            path: {{ .Values.kubeletDir }}/plugins_registry/
             type: Directory
         - name: plugin-dir
           hostPath:
-            path: {{ kubelet_dir }}/plugins/lcrypt
+            path: {{ .Values.kubeletDir }}/plugins/lcrypt
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
-            path: {{ kubelet_dir }}/pods
+            path: {{ .Values.kubeletDir }}/pods
             type: Directory

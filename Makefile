@@ -1,8 +1,10 @@
-.PHONY: build-grpc clean build-image deploy-image
+.PHONY: build-grpc clean build-image push-image deploy-helm
 
 proto_dir = csi/protos
 package_dir = csi
-image_name = registry.katholica.de/csi-implementation
+namespace = kube-system
+pull_secret = regcred-cah-csi
+application_name = lcrypt
 
 build-grpc: $(proto_dir)/csi.proto
 	python3 -m grpc_tools.protoc -I./$(proto_dir) --python_out=$(package_dir) --grpc_python_out=$(package_dir) $<
@@ -14,8 +16,18 @@ $(proto_dir)/csi.proto:
 build-image:
 	docker build -t $(image_name) .
 
-deploy-image: build-image
+push-image: build-image
 	docker push $(image_name)
+
+deploy-helm: push-image
+	helm upgrade --install $(application_name) helm/lcrypt \
+		--set imageName=$(image_name) \
+		--set namespace=$(namespace) \
+		--set pullSecret=$(pull_secret)
+
+rollout: push-image deploy-helm
+	kubectl -n $(namespace) rollout restart daemonset lcrypt-csi-nodeplugin
+	kubectl -n $(namespace) rollout restart statefulset lcrypt-csi-provisioner
 
 clean:
 	rm $(proto_dir)/csi.proto

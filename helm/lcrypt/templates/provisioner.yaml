@@ -3,7 +3,7 @@ kind: StatefulSet
 apiVersion: apps/v1
 metadata:
   name: lcrypt-csi-provisioner
-  namespace: {{ namespace }}
+  namespace: {{ .Values.namespace }}
   labels:
     app.kubernetes.io/part-of: lcrypt
     app.kubernetes.io/component: csi-driver
@@ -19,13 +19,15 @@ spec:
   template:
     metadata:
       name: csi-provisioner
-      namespace: {{ namespace }}
+      namespace: {{ .Values.namespace }}
       labels:
         app.kubernetes.io/part-of: lcrypt
         app.kubernetes.io/component: csi-driver
         app.kubernetes.io/name: lcrypt-csi-provisioner
     spec:
       serviceAccountName: lcrypt-csi-provisioner
+      imagePullSecrets:
+        - name: {{ .Values.pullSecret }}
       containers:
         - name: csi-provisioner
           image: gcr.io/k8s-staging-sig-storage/csi-provisioner:canary
@@ -58,7 +60,7 @@ spec:
             capabilities:
               add: ["CAP_SYS_ADMIN", "SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: {{ image_name }}
+          image: {{ .Values.imageName }}
           env:
             - name: NODE_ID
               valueFrom:
