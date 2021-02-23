@@ -41,10 +41,25 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
         # TODO
         pass
 
-    @log_request_and_reply
+    @log_request_and_reply(fields=["name", "capacity_range", "volume_capabilities", "parameters"])
     def CreateVolume(self, request, context):
-        context.set_code(grpc.StatusCode.RESOURCE_EXHAUSTED)
-        return csi_pb2.CreateVolumeResponse()
+        caps = request.volume_capabilities[0]
+        if caps.access_mode.mode not in [
+                                csi_pb2.VolumeCapability.AccessMode.SINGLE_NODE_WRITER,
+                                csi_pb2.VolumeCapability.AccessMode.SINGLE_NODE_READER_ONLY
+                            ]:
+            errmsg = f"Cannot handle {caps.access_mode}"
+            self.logger.error(errmsg)
+            context.set_details(errmsg)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            return csi_pb2.CreateVolumeResponse()
+
+        return csi_pb2.CreateVolumeResponse(
+            volume={
+                "volume_id": request.name,
+                "capacity_bytes": request.capacity_range.required_bytes,
+            }
+        )
 
     @log_request_and_reply
     def DeleteVolume(self, request, context):
