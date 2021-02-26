@@ -43,12 +43,19 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
 
     @log_request_and_reply(fields=["name", "capacity_range", "volume_capabilities", "parameters"])
     def CreateVolume(self, request, context):
-        caps = request.volume_capabilities[0]
+        caps = request.volume_capabilities[0] #TODO: iterate over volume_capabilities instead. could be multiple
         if caps.access_mode.mode not in [
                                 csi_pb2.VolumeCapability.AccessMode.SINGLE_NODE_WRITER,
                                 csi_pb2.VolumeCapability.AccessMode.SINGLE_NODE_READER_ONLY
                             ]:
             errmsg = f"Cannot handle {caps.access_mode}"
+            self.logger.error(errmsg)
+            context.set_details(errmsg)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            return csi_pb2.CreateVolumeResponse()
+
+        if not caps.HasField('mount'):
+            errmsg = f"Invalid volume type. Can only handle 'mount'"
             self.logger.error(errmsg)
             context.set_details(errmsg)
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
