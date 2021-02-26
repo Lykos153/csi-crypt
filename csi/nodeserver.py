@@ -3,6 +3,10 @@ nodeserver implementation
 """
 import os
 import logging
+import subprocess
+from pathlib import Path
+
+import grpc
 
 from . import csi_pb2
 from . import csi_pb2_grpc
@@ -24,12 +28,41 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
     def NodeGetCapabilities(self, request, context):
         return csi_pb2.NodeGetCapabilitiesResponse()
 
-    @log_request_and_reply(fields=["volume_id"])
+    @log_request_and_reply(fields=["volume_id", "target_path"])
     def NodePublishVolume(self, request, context):
+        source_path = Path("/tmp/", request.volume_id)
+        target_path = Path(request.target_path)
+        source_path.mkdir(parents=True, exist_ok=True)
+        target_path.mkdir()
+
+        test_file = source_path / "test"
+        test_file.touch()
+
+        try:
+            subprocess.check_output(["mount", "--bind", source_path, str(target_path)])
+
+        except subprocess.CalledProcessError as e:
+            errmsg = f"Failed to mount {target_path}. Command returned with {e.returncode}" \
+                     f"Captured output: {e.output}"
+            self.logger.error(errmsg)
+            context.set_details(errmsg)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+            return csi_pb2.CreateVolumeResponse()
+
         return csi_pb2.NodePublishVolumeResponse()
 
     @log_request_and_reply(fields=["volume_id"])
     def NodeUnpublishVolume(self, request, context):
+        target_path = Path(request.target_path)
+        try:
+            subprocess.check_output(["umount", str(target_path)])
+        except subprocess.CalledProcessError as e:
+            errmsg = f"Failed to unmount {target_path}. Command returned with {e.returncode}" \
+                     f"Captured output: {e.output}"
+            self.logger.error(errmsg)
+            context.set_details(errmsg)
+            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+        target_path.rmdir()
         return csi_pb2.NodeUnpublishVolumeResponse()
 
     @log_request_and_reply
