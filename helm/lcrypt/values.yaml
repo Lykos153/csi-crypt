@@ -2,3 +2,7 @@ namespace: kube-system
 kubeletDir: /var/lib/kubelet
 # imageName:
 # pullSecret:
+nodeplugin:
+  debug: true
+provisioner:
+  debug: false

@@ -72,6 +72,10 @@ spec:
               add: ["CAP_SYS_ADMIN", "SYS_ADMIN"]
             allowPrivilegeEscalation: true
           image: {{ .Values.imageName }}
+          {{- if .Values.provisioner.debug }}
+          stdin: true
+          tty: true
+          {{- end }}
           env:
             - name: NODE_ID
               valueFrom:
@@ -81,6 +85,10 @@ spec:
               value: unix://plugin/csi.sock
             - name: CSI_ROLE
               value: "provisioner"
+            {{- if .Values.provisioner.debug }}
+            - name: DEBUG
+              value: "true"
+            {{- end }}
           volumeMounts:
             - name: socket-dir
               mountPath: /plugin

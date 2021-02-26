@@ -51,6 +51,10 @@ spec:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
           image: {{ .Values.imageName }}
+          {{- if .Values.nodeplugin.debug }}
+          stdin: true
+          tty: true
+          {{- end }}
           env:
             - name: NODE_ID
               valueFrom:
@@ -60,6 +64,10 @@ spec:
               value: unix://plugin/csi.sock
             - name: CSI_ROLE
               value: "nodeplugin"
+            {{- if .Values.nodeplugin.debug }}
+            - name: DEBUG
+              value: "true"
+            {{- end }}
           volumeMounts:
             - name: plugin-dir
               mountPath: /plugin

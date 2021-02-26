@@ -48,4 +48,10 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if os.environ.get("DEBUG", "false") == "true":
+        import pdb
+        debugger = pdb.Pdb()
+        debugger.rcLines.extend("continue")
+        debugger.runcall(main)
+    else:
+        main()
