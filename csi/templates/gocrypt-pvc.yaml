@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: StatefulSet
+metadata:
+  name: {{ encryptorName }}
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: encrypter
+          image: busybox #debugging
+          stdin: true #debugging
+          tty: true #debugging
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: pods-mount-dir
+              mountPath: {{ kubeletDir }}/pods
+              mountPropagation: "Bidirectional"
+            - name: storage-backend
+              mountPath: /storage
+      volumes:
+        - name: pods-mount-dir
+          hostPath:
+            path: {{ .Values.kubeletDir }}/pods
+            type: Directory
+        - name: storage-backend
+          persistentVolumeClaim:
+            claimName: {{ backendClaimName }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ backendClaimName }}
+spec:
+  storageClassName: {{ backendStorageClass }}
+  resources:
+    requests:
+      capacity: {{ backendCapacity }}
