@@ -10,3 +10,6 @@ allowVolumeExpansion: false
 # mountOptions:
 #   - debug
 volumeBindingMode: WaitForFirstConsumer
+parameters:
+  csi.storage.k8s.io/node-publish-secret-name: ${pvc.annotations['de.silvio-ankermann.csi-crypt/key']}
+  csi.storage.k8s.io/node-publish-secret-namespace: ${pvc.namespace}
