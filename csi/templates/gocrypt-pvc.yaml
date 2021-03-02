@@ -8,17 +8,23 @@ spec:
     matchLabels:
       app.kubernetes.io/part-of: lcrypt
       app.kubernetes.io/component: csi-driver
-      app.kubernetes.io/name: {{ encrypterName }}
+      app.kubernetes.io/name: encrypter
+      app.kubernetes.io/image: {{ imageName }}
+      app.kubernetes.io/volume-id: {{ volumeId }}
   template:
     metadata:
+      name: encrypter-{{ volumeId }}
       labels:
         app.kubernetes.io/part-of: lcrypt
         app.kubernetes.io/component: csi-driver
-        app.kubernetes.io/name: {{ encrypterName }}
+        app.kubernetes.io/name: encrypter
+        app.kubernetes.io/image: {{ imageName }}
+        app.kubernetes.io/volume-id: {{ volumeId }}
     spec:
+      nodeName: {{ nodeName }}
       containers:
         - name: encrypter
-          image: busybox #debugging
+          image: {{ imageName }}
           stdin: true #debugging
           tty: true #debugging
           securityContext:

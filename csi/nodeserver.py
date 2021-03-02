@@ -10,6 +10,7 @@ import grpc
 from . import csi_pb2
 from . import csi_pb2_grpc
 from .utils import log_request_and_reply
+from . import kube
 
 
 
@@ -24,6 +25,7 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
         self.logger = logging.getLogger("NodeServer")
         self.node_name = node_name
         self.kubelet_dir = kubelet_dir
+        self.kube_client = kube.ApiClient(kubelet_dir, node_name)
 
     @log_request_and_reply
     def NodeGetCapabilities(self, request, context):
@@ -31,26 +33,16 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
 
     @log_request_and_reply(fields=["volume_id", "target_path"])
     def NodePublishVolume(self, request, context):
-        source_path = Path("/tmp/", request.volume_id)
-        target_path = Path(request.target_path)
-        source_path.mkdir(parents=True, exist_ok=True)
-        target_path.mkdir()
-
-        test_file = source_path / "test"
-        test_file.touch()
-
-        try:
-            subprocess.check_output(["mount", "--bind", source_path, str(target_path)])
-
-        except subprocess.CalledProcessError as e:
-            errmsg = f"Failed to mount {target_path}. Command returned with {e.returncode}" \
-                     f"Captured output: {e.output}"
-            self.logger.error(errmsg)
-            context.set_details(errmsg)
-            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-            return csi_pb2.CreateVolumeResponse()
+        encrypter_name = f"encrypter-{request.volume_id}"
+        self.logger.debug(f"Spawning Encrypter {encrypter_name}")
+        self.kube_client.create_encrypter(
+            name=encrypter_name,
+            volume_id=request.volume_id,
+            capacity_bytes=2000, #TODO
+        )
 
         return csi_pb2.NodePublishVolumeResponse()
+
 
     @log_request_and_reply(fields=["volume_id"])
     def NodeUnpublishVolume(self, request, context):
