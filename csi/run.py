@@ -28,15 +28,27 @@ def main():
     h.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
     logger.addHandler(h)
 
-    server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=10))
-    csi_pb2_grpc.add_ControllerServicer_to_server(ControllerServer(), server)
-    csi_pb2_grpc.add_NodeServicer_to_server(NodeServer(), server)
-    csi_pb2_grpc.add_IdentityServicer_to_server(IdentityServer(), server)
-
-    endpoint = os.environ.get("CSI_ENDPOINT", None)
-    if endpoint is None:
-        logger.error("CSI_ENDPOINT environment variable not set")
+    try:
+        node_name = os.environ["NODE_NAME"]
+        endpoint = os.environ["CSI_ENDPOINT"]
+        csi_role = os.environ["CSI_ROLE"]
+        kubelet_dir = os.environ["KUBELET_DIR"]
+    except KeyError as e:
+        logger.error(f"{e.args[0]} environment variable not set")
         raise SystemExit
+    if len(node_name) > 128:
+        logger.info(
+            "NODE_NAME exceeds 128 bytes. It will be truncated when"
+            " sending NodeGetInfoResponse"
+        )
+
+    server = grpc.server(concurrent.futures.ThreadPoolExecutor(max_workers=10))
+    csi_pb2_grpc.add_IdentityServicer_to_server(IdentityServer(), server)
+    if csi_role == "nodeplugin":
+        csi_pb2_grpc.add_NodeServicer_to_server(NodeServer(node_name, kubelet_dir), server)
+    elif csi_role == "provisioner":
+        csi_pb2_grpc.add_ControllerServicer_to_server(ControllerServer(), server)
+
     server.add_insecure_port(endpoint)
     logger.info("Server started")
     server.start()

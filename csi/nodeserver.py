@@ -1,7 +1,6 @@
 """
 nodeserver implementation
 """
-import os
 import logging
 import subprocess
 from pathlib import Path
@@ -20,9 +19,11 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
     volume mount and PV mounts.
     Ref:https://github.com/container-storage-interface/spec/blob/master/spec.md
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, node_name: str, kubelet_dir: Path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("NodeServer")
+        self.node_name = node_name
+        self.kubelet_dir = kubelet_dir
 
     @log_request_and_reply
     def NodeGetCapabilities(self, request, context):
@@ -67,6 +68,4 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
 
     @log_request_and_reply
     def NodeGetInfo(self, request, context):
-        return csi_pb2.NodeGetInfoResponse(
-            node_id=os.environ["NODE_ID"][0:128], #128 byte is RECOMMENDED for best backwards compatibility
-        )
+        return csi_pb2.NodeGetInfoResponse(node_id=self.node_name[0:128])

@@ -56,7 +56,7 @@ spec:
           tty: true
           {{- end }}
           env:
-            - name: NODE_ID
+            - name: NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName

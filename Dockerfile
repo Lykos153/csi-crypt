@@ -9,6 +9,7 @@ COPY ${package_dir} /appdir/csi
 RUN make -C /appdir/csi
 
 ENV CSI_ENDPOINT unix:///csi.sock
+ENV KUBELET_DIR /var/lib/kubelet
 ENV DEBUG false
 ENV PYTHONPATH /appdir
 
