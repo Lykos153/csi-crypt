@@ -1,5 +1,5 @@
 package_dir = csi
-namespace = kube-system
+namespace = lcrypt
 pull_secret = regcred-cah-csi
 application_name = lcrypt
 
@@ -21,6 +21,8 @@ push: image
 .PHONY: deploy # Deploy the kubernetes resources
 deploy:
 	helm upgrade --install $(application_name) helm/lcrypt \
+		--namespace=$(namespace) \
+		--create-namespace \
 		--set imageName=$(image_name) \
 		--set namespace=$(namespace) \
 		--set pullSecret=$(pull_secret)

@@ -21,7 +21,7 @@ spec:
         app.kubernetes.io/name: lcrypt-csi-nodeplugin
       namespace: {{ .Values.namespace }}
     spec:
-      # serviceAccountName: lcrypt-csi-nodeplugin
+      serviceAccountName: lcrypt-csi-nodeplugin
       imagePullSecrets:
         - name: {{ .Values.pullSecret }}
       containers:

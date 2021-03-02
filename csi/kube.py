@@ -1,77 +1,42 @@
-from kubernetes import client, config
-from pathlib import Path
+import kubernetes
+import pathlib
+import jinja2, yaml, json
+import logging
 
-config.load_kube_config()
-#config.load_incluster_config()
+class ApiClient:
+    def __init__(self, kubelet_dir: pathlib.Path):
+        self.logger = logging.getLogger("ApiClient")
+        kubernetes.config.load_incluster_config()
+        self.namespace = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read()
 
-kube_client = client.CoreV1Api()
-app_client = client.AppsV1Api()
-# current_namespace = open("/var/run/secrets/kubernetes.io/serviceaccount/namespace").read()
-current_namespace = "testspace"
+        self.client = kubernetes.client.ApiClient()
+        self.kubelet_dir = pathlib.Path(kubelet_dir)
+        self.pods_dir = self.kubelet_dir / "pods"
 
-storage_backend_class = "local-path"
-backend_capacity = "5Mi"
-kubelet_dir = Path("/var/lib/kubelet")
-pods_dir = kubelet_dir / "pods"
+        templateLoader = jinja2.FileSystemLoader(searchpath="csi/templates/")
+        self.templateEnv = jinja2.Environment(loader=templateLoader, autoescape=False)
 
-
-source_pvc = client.V1PersistentVolumeClaim(
-    metadata=client.V1ObjectMeta(
-        name="lcrypt-source-pvc"
-    ),
-    spec=client.V1PersistentVolumeClaimSpec(
-        storage_class_name=storage_backend_class,
-        resources=client.V1ResourceRequirements(
-            requests={
-                "capacity": backend_capacity
-            }
+    def create_encrypter(
+                        self,
+                        pvc_name: str,
+                        capacity_bytes: int,
+                        backend_class: str=None
+                    ):
+        template = self.templateEnv.get_template("gocrypt-pvc.yaml")
+        rendered = template.render(
+            encrypterName="lcrypt-gocrypt-pvc",
+            kubeletDir=self.kubelet_dir,
+            backendClaimName="lcrypt-backend",
+            backendStorageClass=backend_class,
+            backendCapacity=capacity_bytes,
         )
-    )
-)
-
-stateful_set = client.V1StatefulSet(
-    api_version = 'v1',
-    kind = "StatefulSet",
-    metadata=client.V1ObjectMeta(
-        name="lcrypt-pvc-123",
-        namespace=current_namespace
-    ),
-    spec = client.V1StatefulSetSpec(
-        replicas = 1,
-        template = client.V1PodTemplateSpec(
-            spec = client.V1PodSpec(
-                containers = [
-                    client.V1Container(
-                        name="encrypter",
-                        image="busybox",
-                        stdin=True, # for debugging
-                        tty=True, # debugging
-                        security_context=client.V1SecurityContext(
-                            privileged=True
-                        ),
-                        volume_mounts=[
-                            client.V1VolumeMount(
-                                name="asdf",
-                                mount_path=str(pods_dir),
-                                mount_propagation=True
-                            )
-                        ],
-                    ),
-                ],
-                volumes = [
-                    client.V1PersistentVolumeClaimVolumeSource(
-                        claim_name=source_pvc.metadata.name
-                    ),
-                    client.V1HostPathVolumeSource(
-                        path=str(pods_dir),
-                        type="Directory"
-                    )
-                ]
-            )
-        )
-    ),
-)
-
-
-api_response = app_client.create_namespaced_stateful_set(current_namespace, stateful_set, pretty="true", dry_run="true", field_manager="test")
-print(api_response)
+        for obj in yaml.safe_load_all(rendered):
+            try:
+                kubernetes.utils.create_from_dict(
+                    self.client,
+                    obj,
+                    namespace=self.namespace
+                )
+            except kubernetes.utils.FailToCreateError as e:
+                # reason = json.loads(e.api_exceptions[0].body)['reason']
+                raise
