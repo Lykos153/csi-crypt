@@ -11,7 +11,7 @@ metadata:
   name: lcrypt-csi-nodeplugin-backend-creation
 rules:
 - apiGroups: ["apps"]
-  resources: ["statefulsets"]
+  resources: ["deployments"]
   verbs: ["get", "watch", "list", "delete", "update", "create"]
 ---
 kind: RoleBinding
