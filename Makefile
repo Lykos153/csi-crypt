@@ -2,6 +2,7 @@ package_dir = csi
 namespace = lcrypt
 pull_secret = regcred-cah-csi
 application_name = lcrypt
+backend_storage_class = csi-sc-cinderplugin
 
 .PHONY: build # Same as 'image'
 build: image
@@ -25,7 +26,8 @@ deploy:
 		--create-namespace \
 		--set imageName=$(image_name) \
 		--set namespace=$(namespace) \
-		--set pullSecret=$(pull_secret)
+		--set pullSecret=$(pull_secret) \
+		--set provisioner.backendStorageClass=$(backend_storage_class)
 
 .PHONY: rollout # Rollout the application to the cluster
 rollout: push deploy

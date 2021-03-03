@@ -10,6 +10,7 @@ RUN make -C /appdir/csi
 
 ENV CSI_ENDPOINT unix:///csi.sock
 ENV KUBELET_DIR /var/lib/kubelet
+ENV BACKEND_STORAGE_CLASS ""
 ENV DEBUG false
 ENV PYTHONPATH /appdir
 

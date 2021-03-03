@@ -17,10 +17,11 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
     Ref:https://github.com/container-storage-interface/spec/blob/master/spec.md
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, backend_storage_class: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerServer")
         self.kube_client = kube.ControllerApiClient()
+        self.backend_storage_class = backend_storage_class
 
     @log_request_and_reply
     def ControllerGetCapabilities(self, request, context):
@@ -69,7 +70,7 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
             name=backend_claim_name,
             capacity_bytes=request.capacity_range.required_bytes,
             #TODO: Can we use the actual capacity ranges here?
-            backend_class="csi-sc-cinderplugin",
+            backend_class=self.backend_storage_class,
         )
 
         return csi_pb2.CreateVolumeResponse(
