@@ -25,7 +25,7 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
         self.logger = logging.getLogger("NodeServer")
         self.node_name = node_name
         self.kubelet_dir = kubelet_dir
-        self.kube_client = kube.ApiClient(kubelet_dir, node_name)
+        self.kube_client = kube.NodeApiClient(kubelet_dir, node_name)
 
     @log_request_and_reply
     def NodeGetCapabilities(self, request, context):
@@ -38,24 +38,25 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
         self.kube_client.create_encrypter(
             name=encrypter_name,
             volume_id=request.volume_id,
-            capacity_bytes=2000, #TODO
+            backendClaimName=request.volume_context['backend_claim_name'],
         )
 
+        context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
         return csi_pb2.NodePublishVolumeResponse()
 
 
     @log_request_and_reply(fields=["volume_id"])
     def NodeUnpublishVolume(self, request, context):
-        target_path = Path(request.target_path)
-        try:
-            subprocess.check_output(["umount", str(target_path)])
-        except subprocess.CalledProcessError as e:
-            errmsg = f"Failed to unmount {target_path}. Command returned with {e.returncode}" \
-                     f"Captured output: {e.output}"
-            self.logger.error(errmsg)
-            context.set_details(errmsg)
-            context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-        target_path.rmdir()
+        # target_path = Path(request.target_path)
+        # try:
+        #     subprocess.check_output(["umount", str(target_path)])
+        # except subprocess.CalledProcessError as e:
+        #     errmsg = f"Failed to unmount {target_path}. Command returned with {e.returncode}" \
+        #              f"Captured output: {e.output}"
+        #     self.logger.error(errmsg)
+        #     context.set_details(errmsg)
+        #     context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
+        # target_path.rmdir()
         return csi_pb2.NodeUnpublishVolumeResponse()
 
     @log_request_and_reply

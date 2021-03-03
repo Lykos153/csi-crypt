@@ -8,6 +8,7 @@ import grpc
 from . import csi_pb2
 from . import csi_pb2_grpc
 from .utils import log_request_and_reply
+from . import kube
 
 class ControllerServer(csi_pb2_grpc.ControllerServicer):
     """
@@ -19,6 +20,7 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("ControllerServer")
+        self.kube_client = kube.ControllerApiClient()
 
     @log_request_and_reply
     def ControllerGetCapabilities(self, request, context):
@@ -61,11 +63,23 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             return csi_pb2.CreateVolumeResponse()
 
+        backend_claim_name = f"backend-{request.name}"
+        self.logger.debug(f"Creating Backend PVC {backend_claim_name}")
+        self.kube_client.create_pvc(
+            name=backend_claim_name,
+            capacity_bytes=request.capacity_range.required_bytes,
+            #TODO: Can we use the actual capacity ranges here?
+            backend_class="csi-sc-cinderplugin",
+        )
+
         return csi_pb2.CreateVolumeResponse(
             volume={
                 "volume_id": request.name,
                 "capacity_bytes": request.capacity_range.required_bytes,
-            }
+                "volume_context": {
+                    "backend_claim_name": backend_claim_name,
+                }
+            },
         )
 
     @log_request_and_reply

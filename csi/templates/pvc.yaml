@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ backendClaimName }}
+spec:
+  storageClassName: {{ backendStorageClass }}
+  resources:
+    requests:
+      storage: {{ backendCapacity }}
+  accessModes:
+    - ReadWriteOnce
