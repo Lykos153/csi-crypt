@@ -90,6 +90,8 @@ spec:
             {{- if .Values.provisioner.debug }}
             - name: DEBUG
               value: "true"
+            - name: MAX_CONCURRENT_WORKERS
+              value: "1"
             {{- end }}
           volumeMounts:
             - name: socket-dir

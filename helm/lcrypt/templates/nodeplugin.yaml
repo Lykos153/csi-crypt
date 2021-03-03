@@ -64,9 +64,13 @@ spec:
               value: unix://plugin/csi.sock
             - name: CSI_ROLE
               value: "nodeplugin"
+            - name: KUBELET_DIR
+              value:  {{ .Values.kubeletDir }}
             {{- if .Values.nodeplugin.debug }}
             - name: DEBUG
               value: "true"
+            - name: MAX_CONCURRENT_WORKERS
+              value: "1"
             {{- end }}
           volumeMounts:
             - name: plugin-dir
