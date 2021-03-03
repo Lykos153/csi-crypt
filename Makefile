@@ -2,7 +2,7 @@ package_dir = csi
 namespace = lcrypt
 pull_secret = regcred-cah-csi
 application_name = lcrypt
-backend_storage_class = csi-sc-cinderplugin
+backend_storage_class = ""
 
 .PHONY: build # Same as 'image'
 build: image
