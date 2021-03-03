@@ -33,7 +33,7 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
 
     @log_request_and_reply(fields=["volume_id", "target_path"])
     def NodePublishVolume(self, request, context):
-        encrypter_name = f"encrypter-{request.volume_id}"
+        encrypter_name = self._encrypter_name_from_volume_id(request.volume_id)
         self.logger.debug(f"Spawning Encrypter {encrypter_name}")
         self.kube_client.create_encrypter(
             name=encrypter_name,
@@ -41,24 +41,20 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
             backendClaimName=request.volume_context['backend_claim_name'],
         )
 
-        context.set_code(grpc.StatusCode.FAILED_PRECONDITION)
         return csi_pb2.NodePublishVolumeResponse()
 
 
     @log_request_and_reply(fields=["volume_id"])
     def NodeUnpublishVolume(self, request, context):
-        # target_path = Path(request.target_path)
-        # try:
-        #     subprocess.check_output(["umount", str(target_path)])
-        # except subprocess.CalledProcessError as e:
-        #     errmsg = f"Failed to unmount {target_path}. Command returned with {e.returncode}" \
-        #              f"Captured output: {e.output}"
-        #     self.logger.error(errmsg)
-        #     context.set_details(errmsg)
-        #     context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
-        # target_path.rmdir()
+        encrypter_name = self._encrypter_name_from_volume_id(request.volume_id)
+        self.logger.debug(f"Deleting Encrypter {encrypter_name}")
+        self.kube_client.delete_encrypter(encrypter_name)
+
         return csi_pb2.NodeUnpublishVolumeResponse()
 
     @log_request_and_reply
     def NodeGetInfo(self, request, context):
         return csi_pb2.NodeGetInfoResponse(node_id=self.node_name[0:128])
+
+    def _encrypter_name_from_volume_id(self, volume_id: str):
+        return f"encrypter-{volume_id}"

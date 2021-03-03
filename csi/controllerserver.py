@@ -64,7 +64,7 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
             context.set_code(grpc.StatusCode.INVALID_ARGUMENT)
             return csi_pb2.CreateVolumeResponse()
 
-        backend_claim_name = f"backend-{request.name}"
+        backend_claim_name = self._claim_name_from_request(request.name)
         self.logger.debug(f"Creating Backend PVC {backend_claim_name}")
         self.kube_client.create_pvc(
             name=backend_claim_name,
@@ -85,4 +85,10 @@ class ControllerServer(csi_pb2_grpc.ControllerServicer):
 
     @log_request_and_reply
     def DeleteVolume(self, request, context):
+        backend_claim_name = self._claim_name_from_request(request.name)
+        self.logger.debug(f"Deleting Backend PVC {backend_claim_name}")
+        self.kube_client.delete_pvc(backend_claim_name)
         return csi_pb2.DeleteVolumeResponse()
+
+    def _claim_name_from_request(self, request_name: str):
+        return f"backend-{request_name}"
