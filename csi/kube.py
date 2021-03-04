@@ -2,6 +2,7 @@ import kubernetes
 import pathlib
 import jinja2, yaml, json
 import logging
+import datetime, dateutil.tz
 from . import MODULE_PATH
 
 class ApiClient:
@@ -90,19 +91,27 @@ class NodeApiClient(ApiClient):
         #TODO: Right now we're just checking if the encryptor is running. We want to have proper communication at some point
         watch = kubernetes.watch.Watch()
         core_v1 = kubernetes.client.CoreV1Api(self.api_client)
-        for event in watch.stream(
-                        func=core_v1.list_namespaced_pod,
-                        namespace=self.namespace,
-                        label_selector=f"lcrypt.silvio-ankermann.de/volume-id={volume_id}",
-                        # field_selector=f"metadata.name={name}"
-                        ):
-            if event["object"].status.phase == "Running":
-                watch.stop()
-            if event["type"] == "DELETED":
-                watch.stop()
-                errmsg = f"{name} deleted before it started"
-                self.logger.error(errmsg)
-                raise Exception(errmsg) #TODO: Specific error message
+        last_status = None
+        while True:
+            for event in watch.stream(
+                            func=core_v1.list_namespaced_pod,
+                            namespace=self.namespace,
+                            label_selector=f"lcrypt.silvio-ankermann.de/volume-id={volume_id}",
+                            timeout_seconds=5,
+                            # field_selector=f"metadata.name={name}"
+                            ):
+                last_status = event["object"].status
+                self.logger.debug(f"Pod status: {last_status.phase}")
+                if event["type"] == "DELETED":
+                    watch.stop()
+                    errmsg = f"{name} deleted before it started"
+                    self.logger.error(errmsg)
+                    raise Exception(errmsg) #TODO: Specific error message
+            if last_status is not None and \
+                last_status.phase == "Running" and \
+                last_status.start_time + datetime.timedelta(seconds=5) < datetime.datetime.now(tz=dateutil.tz.tzlocal()):
+                self.logger.debug("Encrypter running for at least 5 seconds")
+                break
 
     def delete_encrypter(self, name: str):
         aps_v1_api = kubernetes.client.AppsV1Api(self.api_client)
