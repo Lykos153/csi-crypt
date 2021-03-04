@@ -66,6 +66,10 @@ spec:
               value: "nodeplugin"
             - name: KUBELET_DIR
               value:  {{ .Values.kubeletDir }}
+            - name: ENCRYPTER_IMAGE_NAME
+              value: {{ .Values.nodeplugin.encrypterImageName }}
+            - name: ENCRYPTER_IMAGE_PULL_SECRET
+              value: {{ .Values.nodeplugin.encrypterPullSecret }}
             {{- if .Values.nodeplugin.debug }}
             - name: DEBUG
               value: "true"

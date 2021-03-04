@@ -1,4 +1,5 @@
 package_dir = csi
+encrypter_image_name = $(image_name):gocryptfs
 namespace = lcrypt
 pull_secret = regcred-cah-csi
 application_name = lcrypt
@@ -11,13 +12,18 @@ build: image
 app-local:  
 	make -C $(package_dir)
 
-.PHONY: image  # Build the image
-image:
+.PHONY: csi image  # Build the image
+csi image:
 	docker build -t $(image_name) --build-arg package_dir=$(package_dir) .
 
+.PHONY: gocryptfs # Build the gocryptfs encrypter image
+gocryptfs:
+	image_name="$(encrypter_image_name)" make -C gocryptfs
+
 .PHONY: push # Push the image to the registry
-push: image
+push: image gocryptfs
 	docker push $(image_name)
+	docker push $(encrypter_image_name)
 
 .PHONY: deploy # Deploy the kubernetes resources
 deploy:
@@ -27,7 +33,9 @@ deploy:
 		--set imageName=$(image_name) \
 		--set namespace=$(namespace) \
 		--set pullSecret=$(pull_secret) \
-		--set provisioner.backendStorageClass=$(backend_storage_class)
+		--set provisioner.backendStorageClass=$(backend_storage_class) \
+		--set nodeplugin.encrypterImageName=$(encrypter_image_name) \
+		--set nodeplugin.encrypterPullSecret=$(pull_secret)
 
 .PHONY: rollout # Rollout the application to the cluster
 rollout: push deploy

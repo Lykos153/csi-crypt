@@ -20,12 +20,14 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
     volume mount and PV mounts.
     Ref:https://github.com/container-storage-interface/spec/blob/master/spec.md
     """
-    def __init__(self, node_name: str, kubelet_dir: Path, *args, **kwargs):
+    def __init__(self, node_name: str, kubelet_dir: Path, encrypter_image:str, encrypter_pull_secret: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger("NodeServer")
         self.node_name = node_name
         self.kubelet_dir = kubelet_dir
         self.kube_client = kube.NodeApiClient(kubelet_dir, node_name)
+        self.encrypter_image = encrypter_image
+        self.encrypter_pull_secret = encrypter_pull_secret
 
     @log_request_and_reply
     def NodeGetCapabilities(self, request, context):
@@ -37,8 +39,12 @@ class NodeServer(csi_pb2_grpc.NodeServicer):
         self.logger.debug(f"Spawning Encrypter {encrypter_name}")
         self.kube_client.create_encrypter(
             name=encrypter_name,
+            image_name=self.encrypter_image,
             volume_id=request.volume_id,
             backendClaimName=request.volume_context['backend_claim_name'],
+            encryption_key=request.secrets['encryption-key'],
+            pull_secret=self.encrypter_pull_secret,
+            target_path=request.target_path,
         )
 
         return csi_pb2.NodePublishVolumeResponse()

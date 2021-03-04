@@ -9,8 +9,7 @@ spec:
       app.kubernetes.io/part-of: lcrypt
       app.kubernetes.io/component: csi-driver
       app.kubernetes.io/name: encrypter
-      app.kubernetes.io/image: {{ imageName }}
-      app.kubernetes.io/volume-id: {{ volumeId }}
+      lcrypt.silvio-ankermann.de/volume-id: {{ volumeId }}
   template:
     metadata:
       name: encrypter-{{ volumeId }}
@@ -18,9 +17,13 @@ spec:
         app.kubernetes.io/part-of: lcrypt
         app.kubernetes.io/component: csi-driver
         app.kubernetes.io/name: encrypter
-        app.kubernetes.io/image: {{ imageName }}
-        app.kubernetes.io/volume-id: {{ volumeId }}
+        lcrypt.silvio-ankermann.de/volume-id: {{ volumeId }}
     spec:
+      imagePullPolicy: Always #debugging
+      {% if pullSecret %}
+      imagePullSecrets:
+        - name: {{ pullSecret }}
+      {% endif %}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -37,6 +40,16 @@ spec:
           tty: true #debugging
           securityContext:
             privileged: true
+          env:
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ secretName }}
+                  key: encryption-key
+            - name: TARGET_PATH
+              value: {{ targetPath }}
+            - name: SOURCE_PATH
+              value: /storage
           volumeMounts:
             - name: pods-mount-dir
               mountPath: {{ kubeletDir }}/pods
@@ -51,3 +64,11 @@ spec:
         - name: storage-backend
           persistentVolumeClaim:
             claimName: {{ backendClaimName }}
+---
+kind: Secret
+apiVersion: v1
+type: Opaque
+metadata:
+  name: {{ secretName }}
+stringData:
+  encryption-key: {{ encryptionKey }}

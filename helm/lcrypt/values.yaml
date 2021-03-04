@@ -4,6 +4,8 @@ kubeletDir: /var/lib/kubelet
 # pullSecret:
 nodeplugin:
   debug: true
+  # encrypterImageName:
+  # encrypterPullSecret:
 provisioner:
   debug: true
   # backendStorageClass:

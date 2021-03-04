@@ -66,18 +66,43 @@ class NodeApiClient(ApiClient):
     def create_encrypter(
                         self,
                         name: str,
+                        image_name: str,
                         volume_id: str,
-                        backendClaimName: str
+                        backendClaimName: str,
+                        target_path: pathlib.Path,
+                        encryption_key: str,
+                        pull_secret: str=None
                     ):
         self._create_from_template(
             "encrypter.yaml",
             encrypterName=name,
             kubeletDir=self.kubelet_dir,
             nodeHostname=self.node_hostname,
-            imageName="busybox", # debugging
+            imageName=image_name,
             volumeId=volume_id,
             backendClaimName=backendClaimName,
+            pullSecret=pull_secret,
+            secretName=volume_id,
+            encryptionKey=encryption_key,
+            targetPath=target_path
         )
+
+        #TODO: Right now we're just checking if the encryptor is running. We want to have proper communication at some point
+        watch = kubernetes.watch.Watch()
+        core_v1 = kubernetes.client.CoreV1Api(self.api_client)
+        for event in watch.stream(
+                        func=core_v1.list_namespaced_pod,
+                        namespace=self.namespace,
+                        label_selector=f"lcrypt.silvio-ankermann.de/volume-id={volume_id}",
+                        # field_selector=f"metadata.name={name}"
+                        ):
+            if event["object"].status.phase == "Running":
+                watch.stop()
+            if event["type"] == "DELETED":
+                watch.stop()
+                errmsg = f"{name} deleted before it started"
+                self.logger.error(errmsg)
+                raise Exception(errmsg) #TODO: Specific error message
 
     def delete_encrypter(self, name: str):
         api = kubernetes.client.AppsV1Api(self.api_client)

@@ -49,6 +49,8 @@ def main():
             NodeServer(
                 node_name,
                 env_required("KUBELET_DIR"),
+                env_required("ENCRYPTER_IMAGE_NAME"),
+                env_required("ENCRYPTER_IMAGE_PULL_SECRET")
             ),
             server
         )
