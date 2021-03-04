@@ -1,4 +1,7 @@
 from functools import wraps
+import os
+import logging
+logger = logging.getLogger("utils")
 
 
 def log_request_and_reply(f: callable=None, fields: list[str]=[]):
@@ -19,3 +22,12 @@ def log_request_and_reply(f: callable=None, fields: list[str]=[]):
     else:
         return _decorate
 
+
+def env_required(env_var_name: str):
+    try:
+        env_var = os.environ[env_var_name]
+        logger.debug(f"{env_var_name}={env_var}")
+        return env_var
+    except KeyError as e:
+        logger.error(f"{e.args[0]} environment variable not set")
+        raise SystemExit

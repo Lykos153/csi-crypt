@@ -13,19 +13,11 @@ from . import csi_pb2_grpc
 from .identityserver import IdentityServer
 from .controllerserver import ControllerServer
 from .nodeserver import NodeServer
+from .utils import env_required
 
 server = None
 
 
-def env_required(env_var_name: str):
-    try:
-        env_var = os.environ[env_var_name]
-        logger.debug(f"{env_var_name}={env_var}")
-        return env_var
-    except KeyError as e:
-        logger.error(f"{e.args[0]} environment variable not set")
-        raise SystemExit
-       
 def handler_stop_signals(signum, frame):
     logger.info(f"Received signal {signum}")
     global server
