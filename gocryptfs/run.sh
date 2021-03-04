@@ -27,7 +27,7 @@ trap _term SIGINT
 
 if [ ! -e "$SOURCE_PATH/gocryptfs.conf" ]; then
     echo "Initialising backend"
-    printf "$ENCRYPTION_KEY" | gocryptfs -init "$SOURCE_PATH"
+    printf "$ENCRYPTION_KEY" | gocryptfs -init "$SOURCE_PATH" >/dev/null
 fi
 
 echo "Publishing volume to $TARGET_PATH"
