@@ -81,10 +81,16 @@ class NodeApiClient(ApiClient):
 
     def delete_encrypter(self, name: str):
         api = kubernetes.client.AppsV1Api(self.api_client)
-        api.delete_namespaced_deployment(
-            name,
-            self.namespace
-        )
+        try:
+            api.delete_namespaced_deployment(
+                name,
+                self.namespace
+            )
+        except kubernetes.client.ApiException as e:
+            if e.reason == "Not Found":
+                self.logger.info(f"{name} didn't exist when trying to delete it")
+            else:
+                raise
 
 class ControllerApiClient(ApiClient):
     def create_pvc(
@@ -102,7 +108,13 @@ class ControllerApiClient(ApiClient):
 
     def delete_pvc(self, name: str):
         api = kubernetes.client.CoreV1Api(self.api_client)
-        api.delete_namespaced_persistent_volume_claim(
-            name,
-            self.namespace
-        )
+        try:
+            api.delete_namespaced_persistent_volume_claim(
+                name,
+                self.namespace
+            )
+        except kubernetes.client.ApiException as e:
+            if e.reason == "Not Found":
+                self.logger.info(f"{name} didn't exist when trying to delete it")
+            else:
+                raise
