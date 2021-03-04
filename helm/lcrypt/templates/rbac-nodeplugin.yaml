@@ -27,3 +27,27 @@ roleRef:
   kind: Role
   name: lcrypt-csi-nodeplugin-backend-creation
   apiGroup: rbac.authorization.k8s.io
+
+# The following role is necessary to get the current nodes labels by name
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: lcrypt-csi-nodeplugin-list-nodes
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["list"]
+---
+  kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: lcrypt-csi-nodeplugin
+subjects:
+  - kind: ServiceAccount
+    name: lcrypt-csi-nodeplugin
+    namespace: {{ .Values.namespace }}
+roleRef:
+  kind: ClusterRole
+  name: lcrypt-csi-nodeplugin-list-nodes
+  apiGroup: rbac.authorization.k8s.io

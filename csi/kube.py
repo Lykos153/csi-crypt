@@ -45,7 +45,23 @@ class NodeApiClient(ApiClient):
     def __init__(self, kubelet_dir: pathlib.Path, node_name: str):
         super().__init__()
         self.kubelet_dir = pathlib.Path(kubelet_dir)
-        self.node_name = node_name
+
+        #TODO: Possibility to add own labels?   
+        v1 = kubernetes.client.CoreV1Api(self.api_client)
+        #TODO: Maybe use all labels instead of just hostname
+        self.node_hostname = v1.list_node(
+            field_selector=f"metadata.name={node_name}"
+            ).items[0].metadata.labels['kubernetes.io/hostname']
+        self.logger.debug(f"node_hostname={self.node_hostname}")
+        if len(
+            v1.list_node(
+                label_selector \
+                    = f'kubernetes.io/hostname={self.node_hostname}'
+            ).items) != 1:
+            errmsg = f"node_hostname={self.node_hostname} is not unique"
+            self.logger.error(errmsg)
+            raise Exception(errmsg) #TODO: Use specific exception
+        #TODO: Watch for updates
 
     def create_encrypter(
                         self,
@@ -57,7 +73,7 @@ class NodeApiClient(ApiClient):
             "encrypter.yaml",
             encrypterName=name,
             kubeletDir=self.kubelet_dir,
-            nodeName=self.node_name,
+            nodeHostname=self.node_hostname,
             imageName="busybox", # debugging
             volumeId=volume_id,
             backendClaimName=backendClaimName,
