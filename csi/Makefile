@@ -16,3 +16,8 @@ $(proto_dir)/csi.proto:
 clean:
 	rm -f $(proto_dir)/csi.proto
 	rm -f csi_pb2.py csi_pb2_grpc.py
+
+
+.PHONY: help # Generate list of targets with descriptions                                                                
+help:                                                                                                                    
+	@grep '^.PHONY: .* #' Makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1###\2/' |  column -t  -s '###'
