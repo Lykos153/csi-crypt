@@ -5,6 +5,7 @@ import os
 import time
 import concurrent
 import logging
+import signal
 
 import grpc
 
@@ -13,8 +14,8 @@ from .identityserver import IdentityServer
 from .controllerserver import ControllerServer
 from .nodeserver import NodeServer
 
+server = None
 
-_ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 def env_required(env_var_name: str):
     try:
@@ -24,6 +25,12 @@ def env_required(env_var_name: str):
     except KeyError as e:
         logger.error(f"{e.args[0]} environment variable not set")
         raise SystemExit
+       
+def handler_stop_signals(signum, frame):
+    logger.info(f"Received signal {signum}")
+    global server
+    server.stop(0)
+    raise SystemExit
 
 def main():
     """
@@ -31,7 +38,7 @@ def main():
     the GRPC server in required endpoint
     """
 
-
+    global server
     server = grpc.server(concurrent.futures.ThreadPoolExecutor(
         max_workers=int(env_required("MAX_CONCURRENT_WORKERS"))
     ))
@@ -63,11 +70,13 @@ def main():
     server.add_insecure_port(env_required("CSI_ENDPOINT"))
     server.start()
     logger.info("Server started")
-    try:
-        while True:
-            time.sleep(_ONE_DAY_IN_SECONDS)
-    except KeyboardInterrupt:
-        server.stop(0)
+    
+    signal.signal(signal.SIGINT, handler_stop_signals)
+    signal.signal(signal.SIGTERM, handler_stop_signals)
+
+    _ONE_DAY_IN_SECONDS = 60 * 60 * 24
+    while True:
+        time.sleep(_ONE_DAY_IN_SECONDS)
 
 
 if __name__ == '__main__':
