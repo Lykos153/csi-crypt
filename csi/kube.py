@@ -82,7 +82,7 @@ class NodeApiClient(ApiClient):
             volumeId=volume_id,
             backendClaimName=backendClaimName,
             pullSecret=pull_secret,
-            secretName=volume_id,
+            secretName=name,
             encryptionKey=encryption_key,
             targetPath=target_path
         )
@@ -105,15 +105,27 @@ class NodeApiClient(ApiClient):
                 raise Exception(errmsg) #TODO: Specific error message
 
     def delete_encrypter(self, name: str):
-        api = kubernetes.client.AppsV1Api(self.api_client)
+        aps_v1_api = kubernetes.client.AppsV1Api(self.api_client)
         try:
-            api.delete_namespaced_deployment(
+            aps_v1_api.delete_namespaced_deployment(
                 name,
                 self.namespace
             )
         except kubernetes.client.ApiException as e:
             if e.reason == "Not Found":
-                self.logger.info(f"{name} didn't exist when trying to delete it")
+                self.logger.info(f"Deployment {name} didn't exist when trying to delete it")
+            else:
+                raise
+
+        core_v1_api = kubernetes.client.CoreV1Api(self.api_client)
+        try:
+            core_v1_api.delete_namespaced_secret(
+                name,
+                self.namespace
+            )
+        except kubernetes.client.ApiException as e:
+            if e.reason == "Not Found":
+                self.logger.info(f"Secret {name} didn't exist when trying to delete it")
             else:
                 raise
 
