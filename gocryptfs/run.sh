@@ -35,8 +35,6 @@ mkdir -p "$TARGET_PATH"
 printf "$ENCRYPTION_KEY" | gocryptfs -f "$SOURCE_PATH" "$TARGET_PATH"& \
 wait $!
 ret=$?
-if [ $ret -ne 0 ]; then
-    echo "ERROR publishing volume"
-fi
+echo "gocryptfs returned with $ret"
 exit $ret
 
