@@ -1,5 +1,5 @@
 FROM python
-ARG FIO_PLOT_VERSION 1.0.8
+ARG FIO_PLOT_VERSION=1.0.8
 
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get install -y curl fio
@@ -7,7 +7,6 @@ RUN apt-get install -y curl fio
 RUN mkdir -p /appdir
 WORKDIR /appdir
 
-ARG FIO_PLOT_VERSION=1.0.8
 RUN curl -LO "https://github.com/louwrentius/fio-plot/archive/v$FIO_PLOT_VERSION.tar.gz" && \
     tar xf "v$FIO_PLOT_VERSION.tar.gz" && \
     rm "v$FIO_PLOT_VERSION.tar.gz" && \
@@ -19,7 +18,12 @@ RUN pip install -r fio-plot/benchmark_script/requirements.txt \
 RUN mkdir /encrypted /unencrypted
 
 ENV TESTFILE_SIZE 5M
+ENV RESULTDIR /results
+ENV APPDIR /appdir
+ENV NUMJOBS 1 2 4 8 16 32 64
+ENV IODEPTH 1 2 4 8 16 32 64
 
 COPY run.sh .
 
+# CMD ["bash", "-c", "while true; echo $TESTFILE_SIZE; do sleep 5; done"]
 CMD ["./run.sh"]

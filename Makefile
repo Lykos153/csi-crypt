@@ -1,9 +1,10 @@
 package_dir = csi
 encrypter_image_name = $(image_name):gocryptfs
+benchmark_image_name = $(image_name):benchmark
 namespace = lcrypt
 pull_secret = regcred-cah-csi
 application_name = lcrypt
-backend_storage_class = ""
+backend_storage_class = local-path
 
 .PHONY: build # Same as 'image'
 build: image
@@ -19,6 +20,19 @@ csi image:
 .PHONY: gocryptfs # Build the gocryptfs encrypter image
 gocryptfs:
 	image_name="$(encrypter_image_name)" make -C gocryptfs
+
+.PHONY: benchmark # Run the fio benchmark in the cluster
+benchmark:
+	image_name=$(benchmark_image_name) \
+	namespace=$(namespace) \
+	PULL_SECRET_NAME=$(pull_secret) \
+	STORAGE_CLASS_ENCRYPTED=lcrypt \
+	STORAGE_CLASS_UNENCRYPTED=$(backend_storage_class) \
+	CLAIMSIZE=1G \
+	TESTFILE_SIZE=5M \
+	NUMJOBS="1 2" \
+	IODEPTH="1 2" \
+	make -C benchmarks deploy
 
 .encrypter_digest: gocryptfs
 	docker image list --digests | awk "{if (\$$1 == \"$(image_name)\" && \$$2 == \"gocryptfs\") {print \$$3;}}" > $@

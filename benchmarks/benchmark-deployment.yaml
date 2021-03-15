@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lcrypt-benchmark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lcrypt-benchmark
+  template:
+    metadata:
+      labels:
+        app: lcrypt-benchmark
+    spec:
+      imagePullSecrets:
+        - name: $PULL_SECRET_NAME
+      volumes:
+      - name: encrypted
+        persistentVolumeClaim:
+          claimName: lcrypt-benchmark-encrypted
+      - name: unencrypted
+        persistentVolumeClaim:
+          claimName: lcrypt-benchmark-unencrypted
+      - name: results
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: lcrypt-benchmark
+      containers:
+      - name: fio-frontend
+        imagePullPolicy: Always
+        image: nginx
+        volumeMounts:
+        - name: results
+          mountPath: /mnt/data
+        - name: config
+          mountPath: /etc/nginx/conf.d
+        ports:
+        - containerPort: 80
+      initContainers:
+      - name: fio-gen-data
+        imagePullPolicy: Always
+        image: $BENCHMARK_IMAGE
+        volumeMounts:
+        - name: encrypted
+          mountPath: /encrypted
+        - name: unencrypted
+          mountPath: /unencrypted
+        - name: results
+          mountPath: /results
+        env:
+          - name: TESTFILE_SIZE
+            value: $TESTFILE_SIZE
+          - name: IODEPTH
+            value: $IODEPTH
+          - name: NUMJOBS
+            value: $NUMJOBS
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lcrypt-benchmark-encrypted
+  annotations:
+    de.silvio-ankermann.csi-crypt/key: lcrypt-benchmark-key
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: $STORAGE_CLASS_ENCRYPTED
+  resources:
+    requests:
+      storage: $CLAIMSIZE
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: lcrypt-benchmark-unencrypted
+spec:
+  accessModes: [ "ReadWriteOnce" ]
+  storageClassName: $STORAGE_CLASS_UNENCRYPTED
+  resources:
+    requests:
+      storage: $CLAIMSIZE
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lcrypt-benchmark-key
+stringData:
+  encryption-key: phoh6Sohph0OhthairohThaVoovooLah
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lcrypt-benchmark
+data:
+  default.conf: |
+    server {
+
+        listen       80;
+        server_tokens off;
+
+        # special url for external healthchecks (monitoring systems, AWS Route 53 healthchecks, ALB etc)  
+        location = /health {
+            types {}
+            default_type text/plain;
+            return 200 "OK";
+        }
+        
+        location / {
+          alias /mnt/data/;
+          expires -1;
+          autoindex on;
+          default_type text/plain;
+        }
+
+    }
+
