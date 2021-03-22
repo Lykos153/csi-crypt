@@ -16,14 +16,3 @@ RUN pip install -r fio-plot/benchmark_script/requirements.txt \
                 -r fio-plot/fio_plot/requirements.txt
 
 RUN mkdir /encrypted /unencrypted
-
-ENV TESTFILE_SIZE 5M
-ENV RESULTDIR /results
-ENV APPDIR /appdir
-ENV NUMJOBS 1 2 4 8 16 32 64
-ENV IODEPTH 1 2 4 8 16 32 64
-
-COPY run.sh .
-
-# CMD ["bash", "-c", "while true; echo $TESTFILE_SIZE; do sleep 5; done"]
-CMD ["./run.sh"]

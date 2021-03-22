@@ -12,15 +12,8 @@ push: image
 	docker push $(image_name)
 
 .PHONY: deploy # Run the benchmark in the cluster
-export PULL_SECRET_NAME
+.EXPORT_ALL_VARIABLES:
 export BENCHMARK_IMAGE=$(image_name)
-# export TESTFILE_SIZE=
-export STORAGE_CLASS_ENCRYPTED
-export STORAGE_CLASS_UNENCRYPTED
-export CLAIMSIZE
-export TESTFILE_SIZE
-export NUMJOBS
-export IODEPTH
 deploy: push
 	envsubst < benchmark-deployment.yaml | \
 		kubectl apply -n $(namespace) -f -
@@ -29,6 +22,8 @@ deploy: push
 .PHONY: clean  # Delete local files and images
 clean:
 	docker image rm -f $(image_name)
+	envsubst < benchmark-deployment.yaml | \
+		kubectl delete -n $(namespace) -f -
 
 .PHONY: help # Generate list of targets with descriptions                                                                
 help:                                                                                                                    

@@ -29,9 +29,13 @@ benchmark:
 	STORAGE_CLASS_ENCRYPTED=lcrypt \
 	STORAGE_CLASS_UNENCRYPTED=$(backend_storage_class) \
 	CLAIMSIZE=1G \
-	TESTFILE_SIZE=5M \
-	NUMJOBS="1 2" \
-	IODEPTH="1 2" \
+	TESTFILE_SIZE=10M \
+	BLOCKSIZE="4k" \
+	NUMJOBS="1 8" \
+	IODEPTH="1 8" \
+	LOOPS=10 \
+	MODE="read write randread randwrite" \
+	RWMIXREAD="75" \
 	make -C benchmarks deploy
 
 .encrypter_digest: gocryptfs
@@ -62,9 +66,10 @@ rollout: push deploy
 .PHONY: clean  # Delete local files and images
 clean:
 	make clean -C $(package_dir)
+	make clean -C benchmarks
 	docker image rm -f $(image_name)
 	rm -f .encrypter_digest
 
-.PHONY: help # Generate list of targets with descriptions                                                                
+.PHONY: help # Generate list of targets with descriptions
 help:                                                                                                                    
 	@grep '^.PHONY: .* #' Makefile | sed 's/\.PHONY: \(.*\) # \(.*\)/\1###\2/' |  column -t  -s '###'

@@ -41,6 +41,22 @@ spec:
       - name: fio-gen-data
         imagePullPolicy: Always
         image: $BENCHMARK_IMAGE
+        command: ["/bin/sh"]
+        args: ["-x", "-c", "/appdir/fio-plot/benchmark_script/bench_fio \
+          --template fio-plot/benchmark_script/fio-job-template.fio \
+          --type directory \
+          --target /unencrypted /encrypted \
+          --block-size $BLOCKSIZE \
+          --size $TESTFILE_SIZE \
+          --mode $MODE \
+          --rwmixread $RWMIXREAD \
+          --output /results \
+          --numjobs $NUMJOBS \
+          --iodepth $IODEPTH \
+          --loops $LOOPS \
+          --precondition \
+          --precondition-repeat
+          "]
         volumeMounts:
         - name: encrypted
           mountPath: /encrypted
@@ -48,13 +64,6 @@ spec:
           mountPath: /unencrypted
         - name: results
           mountPath: /results
-        env:
-          - name: TESTFILE_SIZE
-            value: $TESTFILE_SIZE
-          - name: IODEPTH
-            value: $IODEPTH
-          - name: NUMJOBS
-            value: $NUMJOBS
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
