@@ -1,5 +1,8 @@
 package_dir = csi
-encrypter_image_name = $(image_name):gocryptfs
+gocryptfs_encrypter_image_name = $(image_name):gocryptfs
+gocryptfs_encrypter_dir = gocryptfs
+dummy_encrypter_image_name = $(image_name):dummy
+dummy_encrypter_dir = encrypter-dummy
 benchmark_image_name = $(image_name):benchmark
 namespace = lcrypt
 pull_secret = regcred-cah-csi
@@ -19,7 +22,11 @@ csi image:
 
 .PHONY: gocryptfs # Build the gocryptfs encrypter image
 gocryptfs:
-	image_name="$(encrypter_image_name)" make -C gocryptfs
+	image_name="$(gocryptfs_encrypter_image_name)" make -C $(gocryptfs_encrypter_dir)
+
+.PHONY: dummy-encrypter # Build the gocryptfs encrypter image
+dummy-encrypter:
+	image_name="$(dummy_encrypter_image_name)" make -C $(dummy_encrypter_dir)
 
 .PHONY: benchmark # Run the fio benchmark in the cluster
 benchmark:
@@ -42,9 +49,10 @@ benchmark:
 	docker image list --digests | awk "{if (\$$1 == \"$(image_name)\" && \$$2 == \"gocryptfs\") {print \$$3;}}" > $@
 
 .PHONY: push # Push the image to the registry
-push: image gocryptfs
+push: image gocryptfs dummy-encrypter
 	docker push $(image_name)
-	docker push $(encrypter_image_name)
+	docker push $(gocryptfs_encrypter_image_name)
+	docker push $(dummy_encrypter_image_name)
 
 .PHONY: deploy # Deploy the kubernetes resources
 deploy: .encrypter_digest #while debugging 
@@ -61,12 +69,14 @@ deploy: .encrypter_digest #while debugging
 .PHONY: rollout # Rollout the application to the cluster
 rollout: push deploy
 	kubectl -n $(namespace) rollout restart daemonset lcrypt-csi-nodeplugin
-	kubectl -n $(namespace) rollout restart statefulset lcrypt-csi-provisioner
+	kubectl -n $(namespace) rollout restart deployment lcrypt-csi-provisioner
 
 .PHONY: clean  # Delete local files and images
 clean:
 	make clean -C $(package_dir)
 	make clean -C benchmarks
+	make clean -C $(gocryptfs_encrypter_dir)
+	make clean -C $(dummy_encrypter_dir)
 	docker image rm -f $(image_name)
 	rm -f .encrypter_digest
 
