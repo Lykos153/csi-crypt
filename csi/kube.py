@@ -53,6 +53,7 @@ class NodeApiClient(ApiClient):
         self.node_hostname = v1.list_node(
             field_selector=f"metadata.name={node_name}"
             ).items[0].metadata.labels['kubernetes.io/hostname']
+        #TODO: Exception if list is empty
         self.logger.debug(f"node_hostname={self.node_hostname}")
         if len(
             v1.list_node(

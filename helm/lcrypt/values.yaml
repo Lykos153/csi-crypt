@@ -2,6 +2,10 @@ namespace: kube-system
 kubeletDir: /var/lib/kubelet
 # imageName:
 # pullSecret:
+
+#TODO: make RBAC installation optional
+#TODO: Templates for StorageClass
+
 nodeplugin:
   debug: true
   # encrypterImageName:

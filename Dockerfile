@@ -15,4 +15,6 @@ ENV MAX_CONCURRENT_WORKERS 10
 ENV DEBUG false
 ENV PYTHONPATH /appdir
 
+#TODO: Clean cache and temp files
+
 CMD ["python",  "-m", "csi.run"]

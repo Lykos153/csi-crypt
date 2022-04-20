@@ -36,10 +36,10 @@ def main():
     ))
     csi_pb2_grpc.add_IdentityServicer_to_server(IdentityServer(), server)
 
-    csi_role = env_required("CSI_ROLE")
+    csi_role = env_required("CSI_ROLE") #TODO: Rename variable. CSI_ prefix is reserved by CSI spec
     if csi_role == "nodeplugin":
         node_name = env_required("NODE_NAME")
-        if len(node_name) > 128:
+        if len(node_name) > 128: #TODO: Increase when switching to newer proto
             logger.info(
                 "NODE_NAME exceeds 128 bytes. It will be truncated when"
                 " sending NodeGetInfoResponse"
@@ -48,14 +48,14 @@ def main():
             NodeServer(
                 node_name,
                 env_required("KUBELET_DIR"),
-                env_required("ENCRYPTER_IMAGE_NAME"),
-                env_required("ENCRYPTER_IMAGE_PULL_SECRET")
+                env_required("ENCRYPTER_IMAGE_NAME"), #TODO make configurable via StorageClass
+                env_required("ENCRYPTER_IMAGE_PULL_SECRET") #TODO shouldn't be required
             ),
             server
         )
     elif csi_role == "provisioner":
         csi_pb2_grpc.add_ControllerServicer_to_server(
-            ControllerServer(env_required("BACKEND_STORAGE_CLASS")),
+            ControllerServer(env_required("BACKEND_STORAGE_CLASS")), #TODO: Make configurable vis StorageClass
             server
         )
 
