@@ -43,7 +43,7 @@ benchmark:
 	LOOPS=10 \
 	MODE="read write randread randwrite" \
 	RWMIXREAD="75" \
-	make -C benchmarks deploy
+	make -C benchmarks cleandeploy
 
 .encrypter_digest: gocryptfs
 	docker image list --digests | awk "{if (\$$1 == \"$(image_name)\" && \$$2 == \"gocryptfs\") {print \$$3;}}" > $@

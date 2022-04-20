@@ -11,6 +11,9 @@ image:
 push: image
 	docker push $(image_name)
 
+.PHONY: cleandeploy # Delte old deployments and run benchmark in the cluster
+cleandeploy: clean-remote deploy
+
 .PHONY: deploy # Run the benchmark in the cluster
 .EXPORT_ALL_VARIABLES:
 export BENCHMARK_IMAGE=$(image_name)
@@ -19,11 +22,17 @@ deploy: push
 		kubectl apply -n $(namespace) -f -
 	
 
-.PHONY: clean  # Delete local files and images
-clean:
+.PHONY: clean  # Delete local images and remote deployment
+clean: clean-local clean-remote
+
+.PHONY: clean-local  # Delete local files and images
+clean-local:
 	docker image rm -f $(image_name)
-	envsubst < benchmark-deployment.yaml | \
-		kubectl delete -n $(namespace) -f -
+
+.PHONY: clean-remote  # Delete remote deployment
+clean-remote:
+	-envsubst < benchmark-deployment.yaml | \
+		kubectl delete --grace-period 0 --force -n $(namespace) -f -
 
 .PHONY: help # Generate list of targets with descriptions                                                                
 help:                                                                                                                    
