@@ -45,8 +45,9 @@ benchmark:
 	RWMIXREAD="75" \
 	make -C benchmarks cleandeploy
 
-.encrypter_digest: gocryptfs
-	docker image list --digests | awk "{if (\$$1 == \"$(image_name)\" && \$$2 == \"gocryptfs\") {print \$$3;}}" > $@
+.encrypter_digest: gocryptfs dummy-encrypter
+	docker image list --digests | awk "{if (\$$1 == \"$(image_name)\" && \$$2 == \"dummy\") {print \$$3;}}" > $@
+	#docker image list --digests | awk "{if (\$$1 == \"$(image_name)\" && \$$2 == \"gocryptfs\") {print \$$3;}}" > $@
 
 .PHONY: push # Push the image to the registry
 push: image gocryptfs dummy-encrypter
