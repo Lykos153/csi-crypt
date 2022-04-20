@@ -55,7 +55,9 @@ spec:
           --iodepth $IODEPTH \
           --loops $LOOPS \
           --precondition \
-          --precondition-repeat
+          --precondition-repeat \
+          --direct 1 \
+          --invalidate 1
           "]
         volumeMounts:
         - name: encrypted

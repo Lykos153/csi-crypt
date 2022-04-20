@@ -38,10 +38,10 @@ benchmark:
 	CLAIMSIZE=1G \
 	TESTFILE_SIZE=10M \
 	BLOCKSIZE="4k" \
-	NUMJOBS="1 8" \
-	IODEPTH="1 8" \
+	NUMJOBS="8" \
+	IODEPTH="8" \
 	LOOPS=10 \
-	MODE="read write randread randwrite" \
+	MODE="write randwrite" \
 	RWMIXREAD="75" \
 	make -C benchmarks cleandeploy
 
