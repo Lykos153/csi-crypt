@@ -1,7 +1,0 @@
-apiVersion: v2
-name: lcrypt
-description: A Helm chart for lcrypt CSI Plugin
-type: application
-
-version: 0.0.1
-

@@ -1,14 +1,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: lcrypt-csi-provisioner
-  namespace: {{ .Values.namespace }}
-
+  name: csi-crypt-provisioner
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: lcrypt-csi-provisioner-runner
+  name: csi-crypt-provisioner-runner
 rules:
   # The following rule should be uncommented for plugins that require secrets
   # for provisioning.
@@ -57,14 +55,13 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: lcrypt-csi-provisioner
+  name: csi-crypt-provisioner
 subjects:
   - kind: ServiceAccount
-    name: lcrypt-csi-provisioner
-    namespace: {{ .Values.namespace }}
+    name: csi-crypt-provisioner
 roleRef:
   kind: ClusterRole
-  name: lcrypt-csi-provisioner-runner
+  name: csi-crypt-provisioner-runner
   apiGroup: rbac.authorization.k8s.io
 
 ---
@@ -73,8 +70,7 @@ roleRef:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  namespace: {{ .Values.namespace }}
-  name: lcrypt-csi-provisioner
+  name: csi-crypt-provisioner
 rules:
 - apiGroups: [""]
   resources: ["persistentvolumeclaims"]
@@ -107,13 +103,11 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: lcrypt-csi-provisioner
-  namespace: {{ .Values.namespace }}
+  name: csi-crypt-provisioner
 subjects:
   - kind: ServiceAccount
-    name: lcrypt-csi-provisioner
-    namespace: {{ .Values.namespace }}
+    name: csi-crypt-provisioner
 roleRef:
   kind: Role
-  name: lcrypt-csi-provisioner
+  name: csi-crypt-provisioner
   apiGroup: rbac.authorization.k8s.io
