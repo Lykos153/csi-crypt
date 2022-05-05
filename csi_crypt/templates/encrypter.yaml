@@ -6,18 +6,18 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: lcrypt
+      app.kubernetes.io/part-of: csi-crypt
       app.kubernetes.io/component: csi-driver
       app.kubernetes.io/name: encrypter
-      lcrypt.silvio-ankermann.de/volume-id: {{ volumeId }}
+      csi-crypt.silvio-ankermann.de/volume-id: {{ volumeId }}
   template:
     metadata:
       name: encrypter-{{ volumeId }}
       labels:
-        app.kubernetes.io/part-of: lcrypt
+        app.kubernetes.io/part-of: csi-crypt
         app.kubernetes.io/component: csi-driver
         app.kubernetes.io/name: encrypter
-        lcrypt.silvio-ankermann.de/volume-id: {{ volumeId }}
+        csi-crypt.silvio-ankermann.de/volume-id: {{ volumeId }}
     spec:
       imagePullPolicy: Always #debugging
       {% if pullSecret %}

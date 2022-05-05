@@ -97,7 +97,7 @@ class NodeApiClient(ApiClient):
             for event in watch.stream(
                             func=core_v1.list_namespaced_pod,
                             namespace=self.namespace,
-                            label_selector=f"lcrypt.silvio-ankermann.de/volume-id={volume_id}",
+                            label_selector=f"csi-crypt.silvio-ankermann.de/volume-id={volume_id}",
                             timeout_seconds=5,
                             # field_selector=f"metadata.name={name}"
                             ):
