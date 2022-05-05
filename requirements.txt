@@ -1,4 +1,4 @@
-grpcio-tools==1.35.0
+grpcio-tools==1.46.0
 kubernetes
 jinja2
 pyyaml
