@@ -2,31 +2,27 @@
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: lcrypt-csi-provisioner
-  namespace: {{ .Values.namespace }}
+  name: csi-crypt-provisioner
   labels:
-    app.kubernetes.io/part-of: lcrypt
+    app.kubernetes.io/part-of: csi-crypt
     app.kubernetes.io/component: csi-driver
-    app.kubernetes.io/name: lcrypt-csi-provisioner
+    app.kubernetes.io/name: csi-crypt-provisioner
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: lcrypt
+      app.kubernetes.io/part-of: csi-crypt
       app.kubernetes.io/component: csi-driver
-      app.kubernetes.io/name: lcrypt-csi-provisioner
+      app.kubernetes.io/name: csi-crypt-provisioner
   template:
     metadata:
       name: csi-provisioner
-      namespace: {{ .Values.namespace }}
       labels:
-        app.kubernetes.io/part-of: lcrypt
+        app.kubernetes.io/part-of: csi-crypt
         app.kubernetes.io/component: csi-driver
-        app.kubernetes.io/name: lcrypt-csi-provisioner
+        app.kubernetes.io/name: csi-crypt-provisioner
     spec:
-      serviceAccountName: lcrypt-csi-provisioner
-      imagePullSecrets:
-        - name: {{ .Values.pullSecret }}
+      serviceAccountName: csi-crypt-provisioner
       containers:
         - name: csi-provisioner
           image: k8s.gcr.io/sig-storage/csi-provisioner:v2.1.0
@@ -53,6 +49,7 @@ spec:
             initialDelaySeconds: 10
             timeoutSeconds: 10
             periodSeconds: 20
+          resources: {}
         - name: csi-attacher
           image: k8s.gcr.io/sig-storage/csi-attacher:v3.0.0
           args:
@@ -64,17 +61,14 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /var/lib/csi/sockets/pluginproxy/
-        - name: lcrypt-provisioner
+          resources: {}
+        - name: csi-crypt-provisioner
           securityContext:
             privileged: true
             capabilities:
               add: ["CAP_SYS_ADMIN", "SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: {{ .Values.imageName }}
-          {{- if .Values.provisioner.debug }}
-          stdin: true
-          tty: true
-          {{- end }}
+          image: ghcr.io/lykos153/csi-crypt:main
           env:
             - name: NODE_NAME
               valueFrom:
@@ -84,17 +78,10 @@ spec:
               value: unix://plugin/csi.sock
             - name: CSI_ROLE
               value: "provisioner"
-            - name: BACKEND_STORAGE_CLASS
-              value: {{ .Values.provisioner.backendStorageClass }}
-            {{- if .Values.provisioner.debug }}
-            - name: DEBUG
-              value: "true"
-            - name: MAX_CONCURRENT_WORKERS
-              value: "1"
-            {{- end }}
           volumeMounts:
             - name: socket-dir
               mountPath: /plugin
+          resources: {}
       volumes:
         - name: socket-dir
-          emptyDir:
+          emptyDir: {}

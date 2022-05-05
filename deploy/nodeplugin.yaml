@@ -1,29 +1,25 @@
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: lcrypt-csi-nodeplugin
-  namespace: {{ .Values.namespace }}
+  name: csi-crypt-nodeplugin
   labels:
-    app.kubernetes.io/part-of: lcrypt
+    app.kubernetes.io/part-of: csi-crypt
     app.kubernetes.io/component: csi-driver
-    app.kubernetes.io/name: lcrypt-csi-nodeplugin
+    app.kubernetes.io/name: csi-crypt-nodeplugin
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/part-of: lcrypt
+      app.kubernetes.io/part-of: csi-crypt
       app.kubernetes.io/component: csi-driver
-      app.kubernetes.io/name: lcrypt-csi-nodeplugin
+      app.kubernetes.io/name: csi-crypt-nodeplugin
   template:
     metadata:
       labels:
-        app.kubernetes.io/part-of: lcrypt
+        app.kubernetes.io/part-of: csi-crypt
         app.kubernetes.io/component: csi-driver
-        app.kubernetes.io/name: lcrypt-csi-nodeplugin
-      namespace: {{ .Values.namespace }}
+        app.kubernetes.io/name: csi-crypt-nodeplugin
     spec:
-      serviceAccountName: lcrypt-csi-nodeplugin
-      imagePullSecrets:
-        - name: {{ .Values.pullSecret }}
+      serviceAccountName: csi-crypt-nodeplugin
       containers:
         - name: csi-driver-registrar
           image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v1.3.0
@@ -34,7 +30,7 @@ spec:
             - name: ADDRESS
               value: /csi/csi.sock
             - name: DRIVER_REG_SOCK_PATH
-              value: {{ .Values.kubeletDir }}/plugins/lcrypt/csi.sock
+              value: /var/lib/kubelet/plugins/csi-crypt/csi.sock
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -44,17 +40,14 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
-        - name: lcrypt-nodeplugin
+          resources: {}
+        - name: csi-crypt-nodeplugin
           securityContext:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: {{ .Values.imageName }}
-          {{- if .Values.nodeplugin.debug }}
-          stdin: true
-          tty: true
-          {{- end }}
+          image: ghcr.io/lykos153/csi-crypt:main
           env:
             - name: NODE_NAME
               valueFrom:
@@ -65,33 +58,24 @@ spec:
             - name: CSI_ROLE
               value: "nodeplugin"
             - name: KUBELET_DIR
-              value:  {{ .Values.kubeletDir }}
-            - name: ENCRYPTER_IMAGE_NAME
-              value: {{ .Values.nodeplugin.encrypterImageName }}
-            - name: ENCRYPTER_IMAGE_PULL_SECRET
-              value: {{ .Values.nodeplugin.encrypterPullSecret }}
-            {{- if .Values.nodeplugin.debug }}
-            - name: DEBUG
-              value: "true"
-            - name: MAX_CONCURRENT_WORKERS
-              value: "1"
-            {{- end }}
+              value: /var/lib/kubelet
           volumeMounts:
             - name: plugin-dir
               mountPath: /plugin
             - name: pods-mount-dir
-              mountPath: {{ .Values.kubeletDir }}/pods
+              mountPath: /var/lib/kubelet/pods
               mountPropagation: "Bidirectional"
+          resources: {}
       volumes:
         - name: registration-dir
           hostPath:
-            path: {{ .Values.kubeletDir }}/plugins_registry/
+            path: /var/lib/kubelet/plugins_registry/
             type: Directory
         - name: plugin-dir
           hostPath:
-            path: {{ .Values.kubeletDir }}/plugins/lcrypt
+            path: /var/lib/kubelet/plugins/csi-crypt
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
-            path: {{ .Values.kubeletDir }}/pods
+            path: /var/lib/kubelet/pods
             type: Directory
