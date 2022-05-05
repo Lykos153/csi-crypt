@@ -1,5 +1,17 @@
 {
   "extends": [
     "config:base"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": [
+        "^csi_crypt/Makefile$"
+      ],
+      "matchStrings": [
+        "https://raw\\.githubusercontent\\.com/container-storage-interface/spec/(?<currentValue>.*?)/csi\\.proto"
+      ],
+      "depNameTemplate": "container-storage-interface/spec",
+      "datasourceTemplate": "github-releases"
+    }
   ]
 }
