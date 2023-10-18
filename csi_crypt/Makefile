@@ -11,7 +11,7 @@ csi_pb2.py csi_pb2_grpc.py &: $(proto_dir)/csi.proto
 
 $(proto_dir)/csi.proto:
 	mkdir -p $(proto_dir)
-	curl -o $@ "https://raw.githubusercontent.com/container-storage-interface/spec/v1.3.0/csi.proto"
+	curl -o $@ "https://raw.githubusercontent.com/container-storage-interface/spec/v1.9.0/csi.proto"
 
 clean:
 	rm -f $(proto_dir)/csi.proto
